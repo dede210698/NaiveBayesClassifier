@@ -40,6 +40,6 @@ Text Preprocessing :
   5. Proses perhitungan peluang masing-masing term pada masing-masing kategori
      input : file.csv hasil proses no 4.b
      output : kata(term) seluruh dokumen beserta kategorinya dan peluang term pada masing-masing kategori dan disimpan kedalam 1 buah file sementara .csv (Optional : langsung disimpan ke DB apabila sekali proses langsung "benar")
-     Format dalam file :| Nama Term | Nama Kategori | Peluang Term |
+     Format dalam file :| Nama Term | Nama Kategori | Frekuensi | Peluang Term |
      Keterangan : hasil dari proses ini, akan dimasukkan kedalam DB (Tabel Kamus)
 
