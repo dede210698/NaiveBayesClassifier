@@ -10,6 +10,7 @@ Proses Menentukan Kategori yang ada pada dataset reuters beserta peluang
   Keterangan : proses ini dilakukan sebelum melakukan teks preprosesing , karena teks preprosesing lebih memperhatikan term-termnya saja. hasil dari proses ini akan dimasukkan kedalam DB (Tabel Kategori)
 
 Text Preprocessing :
+
   1 Tokenize
     input : seluruh dokumen reuters
     output : kata(term) seluruh dokumen beserta kategorinya yang disimpan kedalam 1 buah file sementara .csv (Optional : beberapa file csv)
