@@ -93,7 +93,7 @@ def stemming_word(word):
     return stemmer.stem(word)
 
 
-#membuat list term unik pada tiap kelas
+#membuat list term unik pada tiap kelas dengan  menghasilkan list 2dimensi
 def unique_in_categories(list_word_preprocessing):
     list_categories = get_categories()
     list_word_unique = []
@@ -131,12 +131,14 @@ def count_word_in_categories(list_word_preprocessing):
 def term_unique(list_word_unique):
     list_categories = get_categories()
     l_temp = []
+    l_temp2 = []
     i = 0
     while(i < len(list_categories)):
         for word in list_word_unique[i]:
             l_temp.append(word)
         i = i + 1
-    return  set(l_temp)
+    l_temp2 = set(l_temp)
+    return  l_temp2
 #mengitung jumlah kata untuk kamus
 def count_term_unique(list_word_unique_all_categories):
     return len(list_word_unique_all_categories)
@@ -193,7 +195,7 @@ def naive_bayes():
         j = 0
         while(j < len(list_word_unique_count[i])):
             peluang = ( list_word_unique_count[i][j] + 1) / (list_count_word[i] + sum_term)
-            f.write(str(round(peluang,7)) +"\n")
+            f.write(list_word_unique[i][j]+","+list_categories[i]+","+str(round(peluang,7)) +"\n")
             j = j + 1
         i = i + 1
     f.close()
