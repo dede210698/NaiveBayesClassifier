@@ -97,10 +97,16 @@ def stemming_word(word):
 def unique_in_categories(list_word_preprocessing):
     list_categories = get_categories()
     list_word_unique = []
-    i = 0
+    i = 0    
     while ( i < len(list_categories)):
         list_word_unique.append(set(list_word_preprocessing[i]))
         i = i + 1
+    L_temp2 = []
+    for list in list_word_unique:
+        L_temp = []
+        for word in list:
+            L_temp.append(word)
+        L_temp2.append(L_temp)
     return  list_word_unique
 
 # menghitung jumlah kata unik pada tiap kelas
@@ -138,7 +144,14 @@ def term_unique(list_word_unique):
             l_temp.append(word)
         i = i + 1
     l_temp2 = set(l_temp)
-    return  l_temp2
+    l_temp3 = []
+    for list in l_temp2:
+        l_temp = []
+        for word in list:
+            l_temp.append(word)
+        l_temp3.append(l_temp)
+    return  l_temp3
+
 #mengitung jumlah kata untuk kamus
 def count_term_unique(list_word_unique_all_categories):
     return len(list_word_unique_all_categories)
