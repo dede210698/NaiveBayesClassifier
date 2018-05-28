@@ -2,7 +2,7 @@ import os
 import math
 
 from nltk.stem.snowball import SnowballStemmer;
-
+import MySQLdb
 
 def tokenize(word):
     word = ''.join(word)
@@ -167,6 +167,9 @@ def textPreprocessing(maxDokumen,listKategori,listStopWord):
     return listTermEveryKategori
 
 def naive_bayes():
+    conn = MySQLdb.connect('localhost','root','','naive bayes')
+    cursor = conn.cursor()
+    
     listKategori=getListKategori()
     listStopWord = getListStopWord()
     
@@ -187,15 +190,18 @@ def naive_bayes():
     #print(listJumlahTermUnique)
     #print(listAllTermUnique)
     #print(totalVocabulary)
-
+    
     #membuat kamus untuk entity kategori
     kamusKategoriPeluang = {}
     m=0
     while(m<len(listTermEveryKategori)):
-        peluang = listJumlahDokKategori[m]/(maxDokumen)
-        kamusKategoriPeluang.update ({listKategori[m] : peluang})
+        peluangKategori = listJumlahDokKategori[m]/(maxDokumen)
+        namaKategori = listKategori[m]
+        insertKategori = ("""INSERT INTO kategori values('%s','%s')""" % (namaKategori,peluangKategori))
+        cursor.execute(insertKategori)
+        kamusKategoriPeluang.update ({listKategori[m] : peluangKategori})
         m= m+1
-
+    conn.commit()
     #membuat kamus untuk menyimpan data Nama Kategori dan Jumlah Term Pada Kategori Tertentu
     #dengan struktur (Nama Kategori : TotalTerm)
     kamusKategoriTerm = {}
@@ -217,14 +223,27 @@ def naive_bayes():
             kamusKategoriFrek.update({listKategori[l] : peluang})
             #kamusKategoriFrek[listKategori[l]] = listTermEveryKategori[l].count(term)
             l=l+1
+        insertTerm = ("""INSERT INTO term values('%s')""" % (term))
+        cursor.execute(insertTerm)
         kamusNB.update({term : kamusKategoriFrek})
-
+    conn.commit()
+    
     #menyimpan data kamusNB yang telah dibuat kedalam file.csv (sementara)
     #dengan format Nama Term,Nama Kategori,Peluang
     fp = open("Kamus.csv","w+")
     for term,kategoriInfo in kamusNB.items():
         for kategori in kategoriInfo:
             #kategoriInfo[kategori] = (kategoriInfo[kategori] + 1 )/ (kamusKategoriTerm[kategori] + totalVocabulary) 
+            #insertKamus = ("""INSERT INTO kamus values('%s','%s','%s')""" % (term,kategori,kategoriInfo[kategori]))
+            #cursor.execute(insertKamus)
             fp.write(term +","+kategori+","+str(round(kategoriInfo[kategori],7))+"\n")
             #print(term + " = {" + kategori + " : " + str(kategoriInfo[kategori]) + " }")
+    #conn.commit()
     fp.close()
+
+    conn.close()
+     
+    
+
+
+    
