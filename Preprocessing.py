@@ -130,78 +130,66 @@ def createListAllTermUnique(listTermUnique):
 
 def getTotalVocabulary(listAllTermUnique):
     return len(listAllTermUnique)
-  
-def textPreprocessing(maxDokumen,listKategori,listStopWord):
-    listTermAfterProcess=[]
-    listTermEveryKategori = []
-    i=0 
-    curFolder=0#index untuk folder yang sedang dibaca
-    curFile = 0#index untuk file yang sedang dibaca
-    while(i<math.floor(maxDokumen)):
-        path = os.getcwd() + '\Dokumen\\' + listKategori[curFolder] 
-        if(curFile>=len(os.listdir(path))): #mengecek jika dokumen pada suatu kategori tertentu sudah dibaca semua
-            curFolder = curFolder + 1
-            curFile = 0
-            listTermEveryKategori.append(listTermAfterProcess)
-            listTermAfterProcess=[]
-        path = os.getcwd() + '\Dokumen\\' + listKategori[curFolder] #path ke masing-masing kategori 
-        fp = open(path + "\\Categories_" + listKategori[curFolder] + "Doc_" + str(curFile + 1) + ".csv", "r") #path ke masing-masing dokumen pada kategori tertentu
-        buffer = fp.readlines()
-        listTerm=[]
-        for kalimat in buffer:
-            for term in kalimat.split(): #kalimat.split() menghasilkan list kata-kata dari suatu kalimat yang dibaca
-                term = tokenize(term)#tokenize setiap kata
-                if(not checkStopWord(term,listStopWord)):#check stopword
-                    term = stemming(term)#stemming
-                    if(len(term)>3):#check apakah kata tersebut lebih dari 3 huruf
-                        listTerm.append(term)
-        listTermAfterProcess.extend(listTerm)
-        fp.close()
-        i = i+1
-        if((math.floor(maxDokumen) - i )==0):#cek jika dokumen yang dibaca pada suatu kategori tertentu tidak seluruhnya dibaca
-            listTermEveryKategori.append(listTermAfterProcess)
-            listTermAfterProcess=[]
-        curFile = curFile + 1
-        print("Increment Dokumen :" + str(i) + '\n')
-        print("Kategori : " + listKategori[curFolder] + " Current File :" + str(curFile) + '\n')
-    return listTermEveryKategori
+
 
 def naive_bayes():
-    conn = MySQLdb.connect('localhost','root','','naive bayes')
-    cursor = conn.cursor()
+    #conn = MySQLdb.connect('localhost','root','','naive bayes')
+    #cursor = conn.cursor()
     
     listKategori=getListKategori()
     listStopWord = getListStopWord()
     
     #print(listStopWord)
+    dokUsed = 70/100
+    listTermEveryKategori = []
+    totalDokumen=0
+    inc=0
+    for folderName in listKategori:
+        path = os.getcwd() + '\Dokumen\\' + folderName
+        maxDokumen = math.floor(len(os.listdir(path)) * dokUsed)
+        i=0
+        listTermAfterProcess=[]
+        while(i<maxDokumen):
+            fp = open(path + "\\Categories_" + folderName + "Doc_" + str(i + 1) + ".csv", "r") #path ke masing-masing dokumen pada kategori tertentu
+            buffer = fp.readlines()
+            listTerm=[]
+            for kalimat in buffer:
+                for term in kalimat.split(): #kalimat.split() menghasilkan list kata-kata dari suatu kalimat yang dibaca
+                    term = tokenize(term)#tokenize setiap kata
+                    if(not checkStopWord(term,listStopWord)):#check stopword
+                        term = stemming(term)#stemming
+                        if(len(term)>3):#check apakah kata tersebut lebih dari 3 huruf
+                            listTerm.append(term)
+            listTermAfterProcess.extend(listTerm)
+            fp.close()
+            i = i + 1
+            inc=inc + 1
+            print("Total Dokumen :" + str(inc) + '\n')
+            print("Kategori : " + folderName + " Current File :" + str(i) + '\n')
+        totalDokumen=totalDokumen+maxDokumen
+        listTermEveryKategori.append(listTermAfterProcess)
 
-    maxDokumen = sum(createListJumlahDokumen()) * (70/100)
-    print(maxDokumen)
-    
-    listTermEveryKategori = textPreprocessing(maxDokumen,listKategori,listStopWord)#text preprocessing menghasilkan list term dari setiap kategori yang digunakan
     listTermUnique = createListTermUnique(listTermEveryKategori) #membuat list term pada setiap kategori unique
     listJumlahTermUnique = createListJumlahTermUnique(listTermEveryKategori,listTermUnique) #membuat list jumlah term pada setiap kategori
     listAllTermUnique = createListAllTermUnique(listTermUnique) #membuat list semua term unique
     totalVocabulary = getTotalVocabulary(listAllTermUnique) #menghitung total term yang digunakan
     listTotalTermKategori = createListTotalTerm(listJumlahTermUnique) #membuat list total term pada setiap kategori
     listJumlahDokKategori = createListJumlahDokumen() #membuat list jumlah dokumen pada setiap kategori
-    
+    print(len(listTermEveryKategori))
+    print(totalDokumen)
     #print(listTermEveryKategori)
     #print(listJumlahTermUnique)
     #print(listAllTermUnique)
     #print(totalVocabulary)
-    
+
     #membuat kamus untuk entity kategori
     kamusKategoriPeluang = {}
-    m=0
+    m=0    
     while(m<len(listTermEveryKategori)):
-        peluangKategori = listJumlahDokKategori[m]/(maxDokumen)
-        namaKategori = listKategori[m]
-        insertKategori = ("""INSERT INTO kategori values('%s','%s')""" % (namaKategori,peluangKategori))
-        cursor.execute(insertKategori)
-        kamusKategoriPeluang.update ({listKategori[m] : peluangKategori})
+        peluang = listJumlahDokKategori[m]/totalDokumen
+        kamusKategoriPeluang.update ({listKategori[m] : peluang})
         m= m+1
-    conn.commit()
+
     #membuat kamus untuk menyimpan data Nama Kategori dan Jumlah Term Pada Kategori Tertentu
     #dengan struktur (Nama Kategori : TotalTerm)
     kamusKategoriTerm = {}
@@ -223,25 +211,19 @@ def naive_bayes():
             kamusKategoriFrek.update({listKategori[l] : peluang})
             #kamusKategoriFrek[listKategori[l]] = listTermEveryKategori[l].count(term)
             l=l+1
-        insertTerm = ("""INSERT INTO term values('%s')""" % (term))
-        cursor.execute(insertTerm)
         kamusNB.update({term : kamusKategoriFrek})
-    conn.commit()
-    
+
     #menyimpan data kamusNB yang telah dibuat kedalam file.csv (sementara)
     #dengan format Nama Term,Nama Kategori,Peluang
     fp = open("Kamus.csv","w+")
     for term,kategoriInfo in kamusNB.items():
         for kategori in kategoriInfo:
             #kategoriInfo[kategori] = (kategoriInfo[kategori] + 1 )/ (kamusKategoriTerm[kategori] + totalVocabulary) 
-            #insertKamus = ("""INSERT INTO kamus values('%s','%s','%s')""" % (term,kategori,kategoriInfo[kategori]))
-            #cursor.execute(insertKamus)
             fp.write(term +","+kategori+","+str(round(kategoriInfo[kategori],7))+"\n")
             #print(term + " = {" + kategori + " : " + str(kategoriInfo[kategori]) + " }")
-    #conn.commit()
     fp.close()
-
-    conn.close()
+    
+    #conn.close()
      
     
 
